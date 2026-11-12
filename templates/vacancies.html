@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set heading = 'Вакансии' %}
+{% block heading_actions %}
+<a class="duties-shortcut" href="{{ url_for('duties_page') }}">Обязанности <span aria-hidden="true">↗</span></a>
+{% endblock %}
+{% block content %}
+<section class="vac-toolbar">
+  <div class="vac-search"><i data-lucide="search"></i><input id="vac-search" type="search" placeholder="Поиск по вакансиям, городам, адресам…" aria-label="Поиск вакансий"></div>
+  <div class="vac-toolbar-count" id="vac-visible-count"></div>
+  <a class="button vac-add" href="/vacancies/add"><i data-lucide="plus"></i> Добавить вакансию</a>
+</section>
+<div class="vac-status-filters" role="group" aria-label="Фильтр вакансий">
+  <button type="button" class="vac-filter is-selected" data-filter="all">Все <span id="count-all"></span></button>
+  <button type="button" class="vac-filter filter-active" data-filter="active">Активные <span id="count-active"></span></button>
+  <button type="button" class="vac-filter filter-paused" data-filter="paused">На паузе <span id="count-paused"></span></button>
+  <button type="button" class="vac-filter filter-inactive" data-filter="inactive">Неактивные <span id="count-inactive"></span></button>
+</div>
+<div class="vacgrid">
+{% for v in vacancies %}
+  <article class="vac" data-vacancy data-status="{{ v.status or '' }}" data-search="{{ (v.title or '') ~ ' ' ~ (v.city or '') ~ ' ' ~ (v.warehouse_address or '') ~ ' ' ~ (v.schedule or '') ~ ' ' ~ (v.rate or '') }}">
+    <div class="vachead">
+      <span class="vac-icon" data-job-icon><i data-lucide="package"></i></span>
+      <span class="vac-status" data-status-badge>{{ v.status or 'Неактивная' }}</span>
+    </div>
+    <h3>{{ v.title }}</h3>
+    <p class="vac-city">{{ v.city or 'Город не указан' }}</p>
+    <div class="vacmeta">
+      <span><i data-lucide="coins"></i> Ставка</span><b>{{ v.rate or '—' }}</b>
+      <span><i data-lucide="calendar-clock"></i> График</span><b class="multiline">{{ v.schedule or '—' }}</b>
+      <span><i data-lucide="map-pin"></i> Адрес склада</span><b class="multiline">{{ v.warehouse_address or '—' }}</b>
+      <span><i data-lucide="house"></i> Жильё</span><b class="multiline">{{ v.housing or '—' }}</b>
+      <span><i data-lucide="bus-front"></i> Доезд</span><b class="multiline">{{ v.transport or '—' }}</b>
+    </div>
+    <div class="vac-bottom">
+      <span class="vac-id">#{{ v.id }}</span>
+      <a class="vac-edit" href="{{ url_for('edit_vacancy', vacancy_id=v.id) }}"><i data-lucide="pencil"></i> Редактировать</a>
+    </div>
+  </article>
+{% else %}
+  <div class="empty cardempty">Вакансий пока нет. Добавьте первую.</div>
+{% endfor %}
+</div>
+<div class="vac-no-results" id="vac-no-results" hidden>По этому запросу вакансий не найдено.</div>
+{% endblock %}

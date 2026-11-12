@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% set heading=page_title %}{% block content %}
+<form class="formcard" method="post"><input type="hidden" name="_csrf" value="{{ csrf_token }}"><h2>{{ page_title }}</h2><div class="formgrid">
+<label>Имя и фамилия *<input name="full_name" required value="{{ candidate.full_name if candidate else '' }}"></label>
+<label>Телефон<input name="phone" value="{{ candidate.phone if candidate else '' }}"></label>
+<label>Гражданство<input name="nationality" placeholder="Например, Украина" value="{{ candidate.nationality if candidate else '' }}"></label>
+<label>Город<input name="city" value="{{ candidate.city if candidate else '' }}"></label>
+<label>Вакансия<input name="vacancy" value="{{ candidate.vacancy if candidate else '' }}"></label>
+<label>Статус<select name="status">{% for s in statuses %}<option value="{{ s }}" {% if candidate and candidate.status==s %}selected{% elif not candidate and s=='Новый' %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
+<label>Ответственный рекрутер<input value="{{ candidate.recruiter if candidate else session.get('username','') }}" disabled></label>
+<label class="wide">Заметки<textarea name="notes" rows="4">{{ candidate.notes if candidate else '' }}</textarea></label></div>
+{% if not candidate %}<p class="muted">Кандидат автоматически закрепится за вашим аккаунтом. Другие рекрутеры не смогут его редактировать.</p>{% endif %}
+<div class="actions"><a class="button secondary" href="/candidates">Отмена</a><button>Сохранить</button></div></form>{% endblock %}

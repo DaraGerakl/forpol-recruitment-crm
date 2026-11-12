@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% set heading = 'Обязанности' %}
+{% block content %}
+<style>
+.duties-panel{background:#fff;border:1px solid #e2e7ed;border-radius:12px;padding:24px;max-width:920px;box-shadow:0 3px 15px rgba(20,35,60,.04)}
+.duties-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;color:#263449;font-size:15px}
+.duties-editor{width:100%;min-height:340px;padding:15px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;font:inherit;line-height:1.6;resize:vertical}
+.duties-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
+</style>
+<div style="margin-bottom:20px"><a href="{{ url_for('vacancies') }}" style="color:#17263e;text-decoration:none">← Назад к вакансиям</a></div>
+<div class="sectionhead"><div><h2>Обязанности</h2><p class="muted">Общая информационная страница для команды</p></div></div>
+<div class="duties-panel">
+{% if is_admin %}
+<form method="post" action="{{ url_for('duties_page') }}">
+<input type="hidden" name="_csrf" value="{{ csrf_token }}">
+<label for="duties-content" style="display:block;font-weight:600;margin-bottom:12px">Текст обязанностей</label>
+<textarea id="duties-content" name="content" class="duties-editor" placeholder="Впиши обязанности здесь. Каждая новая строка будет сохранена.">{{ content }}</textarea>
+<div class="duties-actions"><button class="button" type="submit">Сохранить текст</button><span class="muted">Переносы строк сохраняются</span></div>
+</form>
+{% else %}
+{% if content %}<div class="duties-text">{{ content }}</div>{% else %}<p class="muted">Текст обязанностей ещё не добавлен.</p>{% endif %}
+{% endif %}
+</div>
+{% endblock %}

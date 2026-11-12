@@ -1,0 +1,6 @@
+{% extends "base.html" %}{% set heading='Обзор' %}{% block content %}
+<div class="welcome"><div><span class="eyebrow light">ВАША КОМАНДА · ВАШИ РЕЗУЛЬТАТЫ</span><h2>Добро пожаловать в CRM</h2><p>Управляйте кандидатами и вакансиями в одном месте.</p></div><div class="welcomeicon">✦</div></div>
+<div class="stats"><div class="stat"><span>Всего кандидатов</span><b>{{ total }}</b><small>В базе CRM</small></div><div class="stat"><span>Новые кандидаты</span><b>{{ new }}</b><small>Требуют внимания</small></div><div class="stat"><span>Активные вакансии</span><b>{{ active }}</b><small>Открытый набор</small></div></div>
+<div class="sectionhead"><div><h2>Последние кандидаты</h2><p class="muted">Недавно добавленные записи</p></div><a class="button secondary" href="/candidates">Все кандидаты</a></div>
+<div class="tablewrap"><table><thead><tr><th>Кандидат</th><th>Телефон</th><th>Вакансия</th><th>Статус</th></tr></thead><tbody>{% for c in recent %}<tr><td><b>{{ c.full_name }}</b><small>{{ c.city }}</small></td><td>{{ c.phone }}</td><td>{{ c.vacancy }}</td><td><span class="pill">{{ c.status }}</span></td></tr>{% else %}<tr><td colspan="4" class="empty">Пока нет кандидатов. Добавьте первую запись.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

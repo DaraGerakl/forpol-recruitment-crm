@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Редактирование вакансии — DARIA RECRUITMENT</title>
+<style>body{font-family:Arial,sans-serif;background:#f3f6fa;color:#17263e;margin:0;padding:28px}main{max-width:650px;margin:20px auto;background:white;border-radius:16px;padding:28px;box-shadow:0 8px 30px #142a4414}label{display:block;margin:16px 0 5px;font-weight:600}input,textarea,select{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:12px;font:inherit}textarea{min-height:95px}button,.back{display:inline-block;background:#17263e;color:white;border:0;border-radius:8px;padding:12px 18px;text-decoration:none;font:inherit;cursor:pointer;margin-top:20px}.back{background:#64748b;margin-left:10px}.msg{color:#a40}h1{font-size:24px}</style></head>
+<body><main><h1>Редактирование вакансии #{{ vacancy['id'] }}</h1>
+{% with messages = get_flashed_messages() %}{% for msg in messages %}<p class="msg">{{ msg }}</p>{% endfor %}{% endwith %}
+<form method="post"><input type="hidden" name="_csrf" value="{{ csrf_token }}">
+<label>Название вакансии</label><input name="title" required value="{{ vacancy['title'] }}">
+<label>Город</label><input name="city" value="{{ vacancy['city'] }}">
+<label>Ставка</label><input name="rate" value="{{ vacancy['rate'] }}">
+<label>График</label><textarea name="schedule">{{ vacancy['schedule'] }}</textarea>
+<label>Адрес склада</label><textarea name="warehouse_address">{{ vacancy['warehouse_address'] }}</textarea>
+<label>Жильё</label><textarea name="housing">{{ vacancy['housing'] }}</textarea>
+<label>Доезд</label><textarea name="transport">{{ vacancy['transport'] }}</textarea>
+<label>Статус</label><select name="status"><option value="Активна" {% if vacancy['status']=='Активна' %}selected{% endif %}>Активна</option><option value="Закрыта" {% if vacancy['status']=='Закрыта' %}selected{% endif %}>Закрыта</option><option value="Приостановлена" {% if vacancy['status']=='Приостановлена' %}selected{% endif %}>Приостановлена</option></select>
+<button type="submit">Сохранить изменения</button><a class="back" href="{{ url_for('vacancies') }}">Отмена</a>
+</form></main></body></html>

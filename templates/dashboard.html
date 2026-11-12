@@ -1,0 +1,77 @@
+{% extends "base.html" %}{% set heading='Обзор' %}{% block content %}
+<style>
+.fm-banner{position:relative;overflow:hidden;border-radius:17px;background:linear-gradient(115deg,#182231,#303b4a);color:white;padding:25px 30px;margin-bottom:20px;min-height:245px;display:grid;grid-template-columns:minmax(200px,0.9fr) minmax(320px,1.8fr) minmax(160px,.65fr);gap:12px;align-items:center}
+.fm-banner h2{font-size:26px;margin:8px 0 10px;color:#fff}.fm-banner p{color:#cbd3dc;line-height:1.5;margin:0 0 18px}.fm-banner .fm-eyebrow{color:#bac5d3;letter-spacing:1.4px;font-size:11px;font-weight:800}
+.fm-open{background:#fff;color:#1c2938;border:0;border-radius:10px;padding:11px 17px;font-weight:800;cursor:pointer}.fm-open:hover{background:#e7eaf0}
+.fm-map{position:relative;min-height:245px;width:100%}.fm-map svg{width:100%;height:100%;min-height:245px;display:block;overflow:visible}.fm-outline{fill:#2b3949;stroke:#8290a2;stroke-width:1.3}.fm-grid{stroke:#647386;stroke-width:.45;opacity:.25;fill:none}
+.fm-pin{cursor:pointer}.fm-pin circle.fm-core{stroke:#fff;stroke-width:1.5}.fm-pin.active circle.fm-core{fill:#ed4754}.fm-pin.paused circle.fm-core{fill:#a1aab7}.fm-pin circle.fm-halo{fill:#f14d5b;opacity:.16}.fm-pin.paused circle.fm-halo{fill:#aab4c0;opacity:.12}.fm-pin text{font-size:10px;font-weight:750;fill:#fff;paint-order:stroke;stroke:#192534;stroke-width:3px;stroke-linejoin:round}.fm-pin:hover circle.fm-halo{opacity:.4}
+.fm-counts{display:flex;flex-direction:column;gap:18px}.fm-count{display:flex;gap:11px;align-items:center}.fm-count strong{display:block;font-size:20px}.fm-count small{display:block;color:#bfc9d6;font-size:11px;margin-top:4px}.fm-count .fm-symbol{font-size:23px;opacity:.9}
+.fm-modal[hidden]{display:none!important}.fm-modal{position:fixed;inset:0;z-index:9999;background:rgba(10,18,30,.72);display:flex;align-items:center;justify-content:center;padding:22px}.fm-dialog{position:relative;background:#182433;color:#fff;border-radius:18px;width:min(1050px,96vw);max-height:90vh;overflow:auto;padding:24px;box-shadow:0 25px 80px #0008}.fm-dialog h2{color:#fff;margin:0 0 5px}.fm-close{position:absolute;right:18px;top:16px;border:0;background:#334355;color:#fff;border-radius:9px;font-size:23px;width:37px;height:37px;cursor:pointer}.fm-dialog-body{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}.fm-dialog .fm-map{min-height:480px}.fm-dialog .fm-map svg{min-height:480px}.fm-detail{background:#243244;border:1px solid #425266;border-radius:12px;padding:18px;min-height:150px}.fm-detail a{color:#cde1ff}.fm-detail ul{padding-left:20px}.fm-detail li{margin:12px 0}.fm-muted{color:#bac7d7;font-size:13px}.fm-legend{display:flex;gap:15px;margin:9px 0 15px;color:#cbd5e2;font-size:12px}.fm-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.fm-dot.red{background:#ed4754}.fm-dot.grey{background:#a1aab7}
+@media(max-width:950px){.fm-banner{grid-template-columns:1fr 1.5fr}.fm-counts{grid-column:1/-1;flex-direction:row;justify-content:space-between}.fm-dialog-body{grid-template-columns:1fr}.fm-dialog .fm-map,.fm-dialog .fm-map svg{min-height:340px}}
+@media(max-width:650px){.fm-banner{grid-template-columns:1fr}.fm-map{min-height:260px}.fm-counts{flex-wrap:wrap}}
+</style>
+<section class="fm-banner" aria-label="Карта рекрутации">
+ <div><div class="fm-eyebrow">НАШИ ЛОКАЦИИ</div><h2>Карта рекрутации</h2><p>Все города, где размещены наши вакансии. Красные точки — активный набор, серые — приостановленный.</p><button class="fm-open" id="fm-open" type="button">▧ Открыть карту ↗</button></div>
+ <div class="fm-map" id="fm-small-map" aria-label="Карта городов Польши"></div>
+ <div class="fm-counts"><div class="fm-count"><span class="fm-symbol">⌖</span><div><strong id="fm-cities">0 городов</strong><small>Локации CRM</small></div></div><div class="fm-count"><span class="fm-symbol">▣</span><div><strong id="fm-active">0 вакансий</strong><small>Активный набор</small></div></div><div class="fm-count"><span class="fm-symbol">◉</span><div><strong>Польша</strong><small>Наше направление</small></div></div></div>
+</section>
+<div class="fm-modal" id="fm-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fm-title"><div class="fm-dialog"><button class="fm-close" id="fm-close" type="button" aria-label="Закрыть карту">×</button><h2 id="fm-title">Карта рекрутации FORPOL</h2><p class="fm-muted">Нажми на точку, чтобы увидеть вакансии города.</p><div class="fm-legend"><span><i class="fm-dot red"></i>Есть активная вакансия</span><span><i class="fm-dot grey"></i>Все вакансии приостановлены</span></div><div class="fm-dialog-body"><div class="fm-map" id="fm-large-map"></div><div class="fm-detail" id="fm-detail">Выбери город на карте.</div></div></div></div>
+<script id="fm-data" type="application/json">{{ map_vacancies | tojson }}</script>
+<script>
+(function(){
+'use strict';
+const vacancies=JSON.parse(document.getElementById('fm-data').textContent||'[]');
+// Approximate WGS84 city centres; display is an offline schematic, not a navigation map.
+const places=[
+ ['Poznań',52.4064,16.9252,['poznań','poznan','познан','komorniki','głuchowo','gluchowo']],
+ ['Warszawa',52.2297,21.0122,['warszawa','варшава','wypędy','wypedy','fajansowa','praga']],
+ ['Wrocław',51.1079,17.0385,['wrocław','wroclaw','вроцлав']],
+ ['Zielona Góra',51.9356,15.5062,['zielona góra','zielona gora','зелена-гура','зелена гура','zawada']],
+ ['Częstochowa',50.8118,19.1203,['częstochowa','czestochowa','ченстохова']],
+ ['Bydgoszcz',53.1235,18.0084,['bydgoszcz','быдгощ','lиси огон','lisi ogon','łochowo','lochowo']],
+ ['Czeladź',50.3155,19.0782,['czeladź','czeladz','челядзь']],
+ ['Legnica',51.2070,16.1619,['legnica','легница']],
+ ['Szczecin',53.4285,14.5528,['szczecin','щецин','kliniska']],
+ ['Gdańsk',54.3520,18.6466,['gdańsk','gdansk','гданьск','straszyn']],
+ ['Stryków',51.9017,19.6056,['stryków','strykow','стрыкув']],
+ ['Pruszków',52.1700,20.8122,['pruszków','pruszkow','прушкув']],
+ ['Słupsk',54.4641,17.0287,['słupsk','slupsk','слупск','redzikowo']],
+ ['Kołobrzeg',54.1757,15.5834,['kołobrzeg','kolobrzeg','колобжег']],
+ ['Gliwice',50.2945,18.6714,['gliwice','гливице']],
+ ['Sosnowiec',50.2863,19.1041,['sosnowiec','сосновец']],
+ ['Rzeszów',50.0413,21.9990,['rzeszów','rzeszow','жешув']],
+ ['Kąty Wrocławskie',51.0307,16.7671,['kąty wrocławskie','katy wroclawskie','конты вроцлавске']],
+ ['Rybnik',50.0971,18.5418,['rybnik','рыбник']],
+ ['Łódź',51.7592,19.4550,['łódź','lodz','лодзь']],
+ ['Nowa Sól',51.8033,15.7170,['nowa sól','nowa sol']],
+ ['Piła',53.1515,16.7380,['piła','pila']]
+];
+function cityFor(v){let t=[v.title,v.city,v.warehouse_address].filter(Boolean).join(' ').toLocaleLowerCase('pl');let found=places.find(p=>p[3].some(a=>t.includes(a)));return found||null;}
+let groups=[];for(let p of places){let rows=vacancies.filter(v=>cityFor(v)===p);if(rows.length)groups.push({p,rows,active:rows.some(v=>v.status==='Активна')});}
+const unmatched=vacancies.filter(v=>!cityFor(v));
+document.getElementById('fm-cities').textContent=groups.length+' городов';document.getElementById('fm-active').textContent=vacancies.filter(v=>v.status==='Активна').length+' вакансий';
+// Simple geographic projection of Poland; entirely local, no third-party services or network required.
+const px=lon=>40+(lon-14.0)/(24.2-14.0)*510,py=lat=>335-(lat-49.0)/(54.9-49.0)*310;
+const outline=[[14.15,53.92],[14.24,53.56],[14.43,53.19],[14.65,52.63],[14.73,52.05],[14.58,51.72],[14.81,51.14],[15.18,50.89],[15.77,50.75],[16.07,50.54],[16.42,50.10],[16.87,50.10],[17.18,49.99],[17.63,49.58],[18.17,49.52],[18.57,49.90],[19.12,49.43],[19.75,49.18],[20.21,49.34],[20.75,49.25],[21.35,49.46],[22.08,49.06],[22.60,49.12],[22.76,49.60],[23.27,50.05],[23.67,50.37],[23.85,50.85],[23.54,51.32],[23.67,52.02],[23.58,52.63],[23.71,53.26],[23.32,53.78],[22.73,54.14],[22.01,54.37],[21.35,54.33],[20.60,54.39],[19.65,54.45],[19.25,54.35],[18.68,54.40],[18.30,54.77],[17.70,54.76],[17.12,54.71],[16.57,54.56],[15.96,54.35],[15.35,54.23],[14.71,54.05]];
+const svgNS='http://www.w3.org/2000/svg';function node(tag,attrs={},text){let e=document.createElementNS(svgNS,tag);for(let [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(text)e.textContent=text;return e;}
+function renderMap(id){let holder=document.getElementById(id);let svg=node('svg',{viewBox:'0 0 600 380',role:'img','aria-label':'Схематическая карта Польши с городами рекрутации'});svg.appendChild(node('path',{class:'fm-outline',d:'M'+outline.map(p=>px(p[0]).toFixed(1)+','+py(p[1]).toFixed(1)).join('L')+'Z'}));
+ for(let lon=15;lon<24;lon+=2)svg.appendChild(node('line',{class:'fm-grid',x1:px(lon),y1:22,x2:px(lon),y2:350}));
+ for(let lat=50;lat<55;lat++)svg.appendChild(node('line',{class:'fm-grid',x1:40,y1:py(lat),x2:550,y2:py(lat)}));
+ for(let g of groups){let [name,lat,lon]=g.p;let x=px(lon),y=py(lat);let pin=node('g',{class:'fm-pin '+(g.active?'active':'paused'),tabindex:'0',role:'button','aria-label':name+', вакансий: '+g.rows.length});pin.appendChild(node('circle',{class:'fm-halo',cx:x,cy:y,r:13}));pin.appendChild(node('circle',{class:'fm-core',cx:x,cy:y,r:5.5}));let label=node('text',{x:x+9,y:y-8},name);pin.appendChild(label);pin.addEventListener('click',()=>{showCity(g);if(id==='fm-small-map')openModal()});pin.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showCity(g);if(id==='fm-small-map')openModal()}});svg.appendChild(pin);}
+ holder.appendChild(svg);}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showCity(g){document.getElementById('fm-detail').innerHTML='<h3 style="color:white;margin:0 0 8px">'+escapeHtml(g.p[0])+'</h3><div class="fm-muted">Вакансий: '+g.rows.length+'</div><ul>'+g.rows.map(v=>'<li><b>'+escapeHtml(v.title)+'</b><div class="fm-muted">'+escapeHtml(v.status)+' · '+escapeHtml(v.rate||'Ставка не указана')+'</div><a href="/vacancies/'+encodeURIComponent(v.id)+'/edit">Открыть вакансию ↗</a></li>').join('')+'</ul>';}
+const modal=document.getElementById('fm-modal'),openBtn=document.getElementById('fm-open'),closeBtn=document.getElementById('fm-close');let previousFocus;
+function openModal(){previousFocus=document.activeElement;modal.hidden=false;document.body.style.overflow='hidden';closeBtn.focus();}
+function closeModal(){modal.hidden=true;document.body.style.overflow='';if(previousFocus)previousFocus.focus();}
+openBtn.addEventListener('click',openModal);closeBtn.addEventListener('click',closeModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!modal.hidden)closeModal()});
+renderMap('fm-small-map');renderMap('fm-large-map');if(groups.length)showCity(groups[0]);
+if(unmatched.length){let d=document.getElementById('fm-detail');d.insertAdjacentHTML('beforeend','<p class="fm-muted">Не распознаны города у '+unmatched.length+' вакансий. Проверь названия городов в CRM.</p>');}
+})();
+</script>
+
+<div class="welcome"><div><span class="eyebrow light">ВАША КОМАНДА · ВАШИ РЕЗУЛЬТАТЫ</span><h2>Добро пожаловать в CRM</h2><p>Управляйте кандидатами и вакансиями в одном месте.</p></div><div class="welcomeicon">✦</div></div>
+<div class="stats"><div class="stat"><span>Всего кандидатов</span><b>{{ total }}</b><small>В базе CRM</small></div><div class="stat"><span>Новые кандидаты</span><b>{{ new }}</b><small>Требуют внимания</small></div><div class="stat"><span>Активные вакансии</span><b>{{ active }}</b><small>Открытый набор</small></div></div>
+<div class="sectionhead"><div><h2>Последние кандидаты</h2><p class="muted">Недавно добавленные записи</p></div><a class="button secondary" href="/candidates">Все кандидаты</a></div>
+<div class="tablewrap"><table><thead><tr><th>Кандидат</th><th>Телефон</th><th>Вакансия</th><th>Статус</th></tr></thead><tbody>{% for c in recent %}<tr><td><b>{{ c.full_name }}</b><small>{{ c.city }}</small></td><td>{{ c.phone }}</td><td>{{ c.vacancy }}</td><td><span class="pill">{{ c.status }}</span></td></tr>{% else %}<tr><td colspan="4" class="empty">Пока нет кандидатов. Добавьте первую запись.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

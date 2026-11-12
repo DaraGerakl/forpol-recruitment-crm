@@ -1,0 +1,17 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title or 'FORPOL RECRUITMENT CRM' }}</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"><script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script><script src="{{ url_for('static',filename='crm_ui.js') }}" defer></script></head>
+<body><div class="shell">
+<aside class="sidebar"><div class="brand"><div class="forpol-brandmark" aria-hidden="true"><svg viewBox="0 0 52 52" width="44" height="44"><g fill="#e3212b"><circle cx="26" cy="5" r="3.7"/><circle cx="14" cy="11" r="3.7"/><circle cx="38" cy="11" r="3.7"/><circle cx="5" cy="24" r="3.7"/><circle cx="26" cy="18" r="3.7"/><circle cx="47" cy="24" r="3.7"/><circle cx="14" cy="30" r="3.7"/><circle cx="38" cy="30" r="3.7"/></g><g fill="#171717"><circle cx="26" cy="31" r="3.7"/><circle cx="5" cy="38" r="3.1"/><circle cx="47" cy="38" r="3.1"/><circle cx="14" cy="44" r="3.1"/><circle cx="38" cy="44" r="3.1"/><circle cx="26" cy="49" r="2.8"/></g></svg></div><div class="forpol-brandtext"><b>FOR<span>POL</span></b><small>RECRUITMENT CRM</small></div></div>
+<nav>
+<a href="/" class="{{ 'current' if request.path == '/' else '' }}"><span class="navicon" data-icon="layout-dashboard"></span><span>Обзор</span></a>
+<a href="/vacancies" class="{{ 'current' if request.path.startswith('/vacancies') else '' }}"><span class="navicon" data-icon="briefcase-business"></span><span>Вакансии</span></a>
+<a href="/candidates" class="{{ 'current' if request.path.startswith('/candidates') else '' }}"><span class="navicon" data-icon="users"></span><span>Кандидаты</span></a>
+{% if session.get('role')=='admin' %}
+<a href="/team" class="{{ 'current' if request.path.startswith('/team') else '' }}"><span class="navicon" data-icon="user-round-cog"></span><span>Команда</span></a>
+<a href="/audit" class="{{ 'current' if request.path.startswith('/audit') else '' }}"><span class="navicon" data-icon="history"></span><span>История действий</span></a>
+{% endif %}
+</nav>
+<div class="sidebottom"><span>{{ session.get('username','') }}</span><form method="post" action="/logout"><input type="hidden" name="_csrf" value="{{ csrf_token }}"><button class="linkbutton">Выйти ↗</button></form></div></aside>
+<main class="main"><header><div><span class="eyebrow">RECRUITMENT WORKSPACE</span><div class="heading-row"><h1>{{ heading or 'Рабочее пространство' }}</h1>{% block heading_actions %}{% endblock %}</div></div><div class="userchip">● <span>Локальная сеть</span></div></header>
+{% for msg in get_flashed_messages() %}<div class="flash">{{ msg }}</div>{% endfor %}{% block content %}{% endblock %}
+<footer>Закрытая система · FORPOL RECRUITMENT CRM</footer></main></div></body></html>
